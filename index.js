@@ -38,8 +38,10 @@ async function run() {
       res.send(result)
     })
 
-    app.get('/tasks', async (req, res) => {
-      const result = await taskCollection.find().toArray()
+    app.get('/tasks/:email', async (req, res) => {
+      const email = req.params.email
+      const query = { user_email: email }
+      const result = await taskCollection.find(query).toArray()
       res.send(result)
     })
 
@@ -49,12 +51,17 @@ async function run() {
       const result = await taskCollection.deleteOne(query)
       res.send(result)
     })
+    app.get('/task/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await taskCollection.findOne(query)
+      res.send(result)
+      console.log(result)
+    })
 
-    app.put('/task/:id', async (req, res) => {
+    app.put('/status/:id', async (req, res) => {
       const id = req.params.id
-      console.log(id)
       const newStatus = req.body.status
-      console.log(req.body.status)
       const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
       const changeStatus = {
@@ -63,6 +70,23 @@ async function run() {
         }
       }
       const result = await taskCollection.updateOne(filter, changeStatus, options)
+      res.send(result)
+    })
+
+    app.put('/task/:id', async (req, res) => {
+      const id = req.params.id
+      const updatedTask = req.body
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const task = {
+        $set: {
+          title: updatedTask.title,
+          description: updatedTask.description,
+          deadline: updatedTask.deadline,
+          priority: updatedTask.priority
+        }
+      }
+      const result = await taskCollection.updateOne(filter, task, options)
       res.send(result)
     })
 
